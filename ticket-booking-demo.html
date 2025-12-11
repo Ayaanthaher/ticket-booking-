@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TicketBooker — Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React + ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <!-- Babel to transpile JSX in browser (for demo purposes only) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="antialiased bg-gray-50">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // Mock API helpers
+    const mockEvents = [
+      { id: 'e1', name: 'Indie Music Night', description: 'An evening of acoustic sets.', date: '2026-01-20', location: 'The Loft', totalCapacity: 150, availableTickets: 42, price: 12.50 },
+      { id: 'e2', name: 'Open-Air Cinema', description: 'Classic movies under the stars.', date: '2026-02-05', location: 'City Park', totalCapacity: 300, availableTickets: 0, price: 5.00 },
+      { id: 'e3', name: 'Tech Meetup', description: 'Talks and networking for builders.', date: '2026-03-12', location: 'CoWork Hub', totalCapacity: 100, availableTickets: 18, price: 0 }
+    ];
+
+    function App() {
+      const [user, setUser] = useState(null);
+      return (
+        <div>
+          {!user ? <AuthEntry onLogin={setUser} /> : <MainLayout user={user} onLogout={() => setUser(null)} />}
+        </div>
+      );
+    }
+
+    function AuthEntry({ onLogin }) {
+      return (
+        <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 to-indigo-100">
+          <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+            <div className="text-center mb-8">
+              <div className="text-4xl">🎟️</div>
+              <h1 className="text-3xl font-bold text-gray-800 mt-2">TicketBooker</h1>
+              <p className="text-gray-600 mt-2">Demo — choose a role to continue</p>
+            </div>
+
+            <div className="space-y-4">
+              <button onClick={() => onLogin({ id: '1', name: 'John Doe', role: 'user' })}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                Login as User
+              </button>
+              <button onClick={() => onLogin({ id: '2', name: 'Admin User', role: 'admin' })}
+                className="w-full bg-gray-800 text-white py-3 rounded-lg font-semibold hover:bg-gray-900 transition-colors">
+                Login as Admin
+              </button>
+            </div>
+
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg text-xs text-gray-600">
+              This is a static demo generated from your React source. Replace with your backend to make it dynamic.
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function MainLayout({ user, onLogout }) {
+      const [route, setRoute] = useState(user.role === 'admin' ? 'dashboard' : 'home');
+
+      const userRoutes = [
+        { id: 'home', label: 'Events' },
+        { id: 'bookings', label: 'My Bookings' },
+        { id: 'profile', label: 'Profile' }
+      ];
+
+      const adminRoutes = [
+        { id: 'dashboard', label: 'Dashboard' },
+        { id: 'events', label: 'Manage Events' },
+        { id: 'bookings', label: 'All Bookings' }
+      ];
+
+      const routes = user.role === 'admin' ? adminRoutes : userRoutes;
+
+      return (
+        <div className="min-h-screen">
+          <nav className="bg-white shadow-md">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between items-center h-16">
+                <div className="flex items-center gap-2">
+                  <div className="text-2xl">🎟️</div>
+                  <span className="text-xl font-bold text-gray-800">TicketBooker</span>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  {routes.map(r => (
+                    <button key={r.id} onClick={() => setRoute(r.id)}
+                      className={'px-3 py-2 rounded-lg ' + (route === r.id ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-gray-600 hover:bg-gray-50')}>
+                      {r.label}
+                    </button>
+                  ))}
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-700">Hi, {user.name}</span>
+                    <button onClick={onLogout} className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg">Logout</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </nav>
+
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {user.role === 'admin' ? (
+              <>
+                {route === 'dashboard' && <AdminDashboard />}
+                {route === 'events' && <AdminEvents />}
+                {route === 'bookings' && <AdminBookings />}
+              </>
+            ) : (
+              <>
+                {route === 'home' && <UserHome />}
+                {route === 'bookings' && <UserBookings />}
+                {route === 'profile' && <UserProfile user={user} />}
+              </>
+            )}
+          </main>
+        </div>
+      );
+    }
+
+    // User components (simplified & static)
+    function UserHome() {
+      const [events, setEvents] = useState([]);
+      const [selected, setSelected] = useState(null);
+      const [count, setCount] = useState(1);
+
+      useEffect(() => {
+        // Simulate fetch
+        setEvents(mockEvents);
+      }, []);
+
+      const handleConfirm = () => {
+        alert('Booking confirmed! (demo only)');
+        setSelected(null);
+        setCount(1);
+      };
+
+      return (
+        <div className="space-y-6">
+          <h1 className="text-3xl font-bold text-gray-800">Available Events</h1>
+
+          {events.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-lg">
+              <div className="text-4xl mb-4">📅</div>
+              <p className="text-gray-600">No events available at the moment</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {events.map(ev => (
+                <div key={ev.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">{ev.name}</h3>
+                  <p className="text-gray-600 text-sm mb-4">{ev.description}</p>
+                  <div className="space-y-2 mb-4">
+                    <div className="text-sm text-gray-700">📅 {new Date(ev.date).toLocaleDateString()}</div>
+                    <div className="text-sm text-gray-700">🎟️ {ev.availableTickets} / {ev.totalCapacity} available</div>
+                    <div className="text-lg font-bold text-blue-600">${ev.price} {ev.price===0 ? '(Free)': ''}</div>
+                  </div>
+
+                  <button onClick={() => setSelected(ev)} disabled={ev.availableTickets === 0}
+                    className={'w-full py-2 rounded-lg font-semibold transition-colors ' + (ev.availableTickets===0 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700')}>
+                    {ev.availableTickets===0 ? 'Sold Out' : 'Book Now'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {selected && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 p-4">
+              <div className="bg-white rounded-lg p-6 max-w-md w-full">
+                <h2 className="text-2xl font-bold mb-4">{selected.name}</h2>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Number of Tickets</label>
+                  <input type="number" min="1" max={selected.availableTickets} value={count}
+                    onChange={(e) => setCount(Math.max(1, parseInt(e.target.value)||1))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                </div>
+
+                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-gray-600">Price per ticket:</span>
+                    <span className="font-semibold">${selected.price}</span>
+                  </div>
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>Total:</span>
+                    <span className="text-blue-600">${(selected.price * count).toFixed(2)}</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <button onClick={() => setSelected(null)}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Cancel</button>
+                  <button onClick={handleConfirm}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Confirm Booking</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function UserBookings() {
+      return (
+        <div className="space-y-6">
+          <h1 className="text-3xl font-bold text-gray-800">My Bookings</h1>
+          <div className="text-center py-12 bg-white rounded-lg">
+            <div className="text-4xl mb-4">🎫</div>
+            <p className="text-gray-600">You haven't made any bookings yet (demo)</p>
+          </div>
+        </div>
+      );
+    }
+
+    function UserProfile({ user }) {
+      const [form, setForm] = useState({ name: user.name, email: user.email || 'user@demo.com' });
+      const handleSubmit = (e) => { e.preventDefault(); alert('Profile updated (demo)'); };
+      return (
+        <div className="space-y-6">
+          <h1 className="text-3xl font-bold text-gray-800">My Profile</h1>
+          <div className="bg-white rounded-lg shadow-md p-6 max-w-2xl">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                <input type="text" required value={form.name} onChange={(e)=>setForm({...form,name:e.target.value})}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <input type="email" required value={form.email} onChange={(e)=>setForm({...form,email:e.target.value})}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+              </div>
+              <div className="pt-4">
+                <button type="submit" className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Update Profile</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    // Admin simplified components
+    function AdminDashboard() {
+      return (
+        <div className="space-y-6">
+          <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <StatCard label="Total Events" value="3" />
+            <StatCard label="Total Bookings" value="0" />
+            <StatCard label="Total Revenue" value="$0" />
+            <StatCard label="Total Users" value="12" />
+          </div>
+        </div>
+      );
+    }
+
+    function StatCard({ label, value }) {
+      return (
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="text-3xl font-bold text-gray-800 mb-1">{value}</div>
+          <div className="text-sm text-gray-600">{label}</div>
+        </div>
+      );
+    }
+
+    function AdminEvents() {
+      const [events, setEvents] = useState([]);
+      useEffect(()=>setEvents(mockEvents),[]);
+      return (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h1 className="text-3xl font-bold text-gray-800">Manage Events</h1>
+            <button className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">+ Add Event</button>
+          </div>
+          <div className="space-y-4">
+            {events.map(ev => (
+              <div key={ev.id} className="bg-white rounded-lg shadow-md p-6">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">{ev.name}</h3>
+                    <p className="text-gray-600 text-sm mb-3">{ev.description}</p>
+                    <div className="grid grid-cols-2 gap-4 text-sm text-gray-700">
+                      <div><span className="font-medium">Date:</span> {new Date(ev.date).toLocaleDateString()}</div>
+                      <div><span className="font-medium">Location:</span> {ev.location}</div>
+                      <div><span className="font-medium">Capacity:</span> {ev.availableTickets} / {ev.totalCapacity}</div>
+                      <div><span className="font-medium">Price:</span> ${ev.price}</div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 ml-4">
+                    <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">Edit</button>
+                    <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg">Delete</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    function AdminBookings() {
+      return (
+        <div className="space-y-6">
+          <h1 className="text-3xl font-bold text-gray-800">All Bookings</h1>
+          <div className="text-center py-12 bg-white rounded-lg">
+            <div className="text-4xl mb-4">📦</div>
+            <p className="text-gray-600">No bookings in this demo.</p>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
